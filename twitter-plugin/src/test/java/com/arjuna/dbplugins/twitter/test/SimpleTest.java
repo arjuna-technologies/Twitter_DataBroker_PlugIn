@@ -4,8 +4,8 @@
 
 package com.arjuna.dbplugins.twitter.test;
 
-import java.util.Collections;
 import java.util.Map;
+import java.util.HashMap;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import com.arjuna.databroker.data.jee.DataFlowNodeLifeCycleControl;
@@ -16,10 +16,30 @@ public class SimpleTest
     @Test
     public void simpleInvocation()
     {
-    	String              name              = "Twitter Data Source";
-    	Map<String, String> properties        = Collections.emptyMap();
-        TwitterDataSource   twitterDataSource = new TwitterDataSource(name, properties);
+        AuthenticationProperties authenticationProperties = new AuthenticationProperties("authentication.properties");
+ 
+        String              name       = "Twitter Data Source";
+        Map<String, String> properties = new HashMap<String, String>();
+        properties.put(TwitterDataSource.TWITTER_CONSUMERKEY_PROPERTYNAME,    authenticationProperties.getConsumerKey());
+        properties.put(TwitterDataSource.TWITTER_CONSUMERSECRET_PROPERTYNAME, authenticationProperties.getConsumerSecret());
+        properties.put(TwitterDataSource.TWITTER_TOKEN_PROPERTYNAME,          authenticationProperties.getToken());
+        properties.put(TwitterDataSource.TWITTER_SECRET_PROPERTYNAME,         authenticationProperties.getSecret());
+        properties.put(TwitterDataSource.POLLINTERVAL_PROPERTYNAME,           "5000");
 
-        DataFlowNodeLifeCycleControl.processCreatedDataFlowNode(twitterDataSource, null);
+        TwitterDataSource twitterDataSource = new TwitterDataSource(name, properties);
+
+//        DataFlowNodeLifeCycleControl.processCreatedDataFlowNode(twitterDataSource, null);
+
+        twitterDataSource.startup();
+        twitterDataSource.activate();
+        try
+        {
+            Thread.sleep(10000);
+        }
+        catch (Throwable throwable)
+        {
+        }
+        twitterDataSource.deactivate();
+        twitterDataSource.shutdown();
     }
 }
