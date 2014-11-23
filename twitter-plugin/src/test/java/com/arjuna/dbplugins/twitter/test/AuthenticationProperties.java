@@ -91,23 +91,23 @@ public class AuthenticationProperties
         }
     }
 
-    public String getSecret()
+    public String getTokenSecret()
     {
         if (_authenticationProperties != null)
         {
-            String secret = _authenticationProperties.getProperty("secret");
+            String tokenSecret = _authenticationProperties.getProperty("token.secret");
 
-            if ((secret != null))
-                return secret;
+            if ((tokenSecret != null))
+                return tokenSecret;
             else
             {
-                fail("Failed to obtain \"secret\" property");
+                fail("Failed to obtain \"token.secret\" property");
                 return null;
             }
         }
         else
         {
-            fail("Failed to obtain \"secret\" property, no property file");
+            fail("Failed to obtain \"token.secret\" property, no property file");
             return null;
         }
     }

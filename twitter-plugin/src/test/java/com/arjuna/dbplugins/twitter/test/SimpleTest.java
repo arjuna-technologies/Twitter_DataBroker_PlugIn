@@ -23,7 +23,7 @@ public class SimpleTest
         properties.put(TwitterDataSource.TWITTER_CONSUMERKEY_PROPERTYNAME,    authenticationProperties.getConsumerKey());
         properties.put(TwitterDataSource.TWITTER_CONSUMERSECRET_PROPERTYNAME, authenticationProperties.getConsumerSecret());
         properties.put(TwitterDataSource.TWITTER_TOKEN_PROPERTYNAME,          authenticationProperties.getToken());
-        properties.put(TwitterDataSource.TWITTER_TOKENSECRET_PROPERTYNAME,    authenticationProperties.getSecret());
+        properties.put(TwitterDataSource.TWITTER_TOKENSECRET_PROPERTYNAME,    authenticationProperties.getTokenSecret());
         properties.put(TwitterDataSource.TWITTER_TRACKTERM_PROPERTYNAME,      "newcastle");
         properties.put(TwitterDataSource.POLLINTERVAL_PROPERTYNAME,           "4");
 
