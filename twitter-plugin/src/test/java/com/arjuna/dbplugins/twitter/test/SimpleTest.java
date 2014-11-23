@@ -23,8 +23,9 @@ public class SimpleTest
         properties.put(TwitterDataSource.TWITTER_CONSUMERKEY_PROPERTYNAME,    authenticationProperties.getConsumerKey());
         properties.put(TwitterDataSource.TWITTER_CONSUMERSECRET_PROPERTYNAME, authenticationProperties.getConsumerSecret());
         properties.put(TwitterDataSource.TWITTER_TOKEN_PROPERTYNAME,          authenticationProperties.getToken());
-        properties.put(TwitterDataSource.TWITTER_SECRET_PROPERTYNAME,         authenticationProperties.getSecret());
-        properties.put(TwitterDataSource.POLLINTERVAL_PROPERTYNAME,           "5000");
+        properties.put(TwitterDataSource.TWITTER_TOKENSECRET_PROPERTYNAME,    authenticationProperties.getSecret());
+        properties.put(TwitterDataSource.TWITTER_TRACKTERM_PROPERTYNAME,      "newcastle");
+        properties.put(TwitterDataSource.POLLINTERVAL_PROPERTYNAME,           "4");
 
         TwitterDataSource twitterDataSource = new TwitterDataSource(name, properties);
 
@@ -34,7 +35,7 @@ public class SimpleTest
         twitterDataSource.activate();
         try
         {
-            Thread.sleep(10000);
+            Thread.sleep(12000);
         }
         catch (Throwable throwable)
         {
