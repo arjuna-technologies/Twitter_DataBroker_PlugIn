@@ -63,7 +63,8 @@ public class TwitterDataSourceFactory implements DataFlowNodeFactory
         propertyNames.add(TwitterDataSource.TWITTER_CONSUMERKEY_PROPERTYNAME);
         propertyNames.add(TwitterDataSource.TWITTER_CONSUMERSECRET_PROPERTYNAME);
         propertyNames.add(TwitterDataSource.TWITTER_TOKEN_PROPERTYNAME);
-        propertyNames.add(TwitterDataSource.TWITTER_SECRET_PROPERTYNAME);
+        propertyNames.add(TwitterDataSource.TWITTER_TOKENSECRET_PROPERTYNAME);
+        propertyNames.add(TwitterDataSource.TWITTER_TRACKTERM_PROPERTYNAME);
         propertyNames.add(TwitterDataSource.POLLINTERVAL_PROPERTYNAME);
 
         return propertyNames;

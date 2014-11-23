@@ -14,7 +14,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import com.arjuna.databroker.data.DataFlow;
 import com.arjuna.databroker.data.DataProvider;
 import com.arjuna.databroker.data.DataSource;
@@ -24,9 +23,10 @@ import com.arjuna.databroker.data.jee.annotation.PostConfig;
 import com.arjuna.databroker.data.jee.annotation.PostCreated;
 import com.arjuna.databroker.data.jee.annotation.PreDeactivated;
 import com.arjuna.databroker.data.jee.annotation.PreDelete;
+import com.google.common.collect.Lists;
 import com.twitter.hbc.ClientBuilder;
 import com.twitter.hbc.core.Constants;
-import com.twitter.hbc.core.endpoint.StatusesSampleEndpoint;
+import com.twitter.hbc.core.endpoint.StatusesFilterEndpoint;
 import com.twitter.hbc.core.processor.StringDelimitedProcessor;
 import com.twitter.hbc.httpclient.BasicClient;
 import com.twitter.hbc.httpclient.auth.Authentication;
@@ -39,7 +39,8 @@ public class TwitterDataSource implements DataSource
     public static final String TWITTER_CONSUMERKEY_PROPERTYNAME    = "Twitter ConsumerKey";
     public static final String TWITTER_CONSUMERSECRET_PROPERTYNAME = "Twitter Consumer Secret";
     public static final String TWITTER_TOKEN_PROPERTYNAME          = "Twitter Token";
-    public static final String TWITTER_SECRET_PROPERTYNAME         = "Twitter Secret";
+    public static final String TWITTER_TOKENSECRET_PROPERTYNAME    = "Twitter Token Secret";
+    public static final String TWITTER_TRACKTERM_PROPERTYNAME      = "Twitter Track Term";
     public static final String POLLINTERVAL_PROPERTYNAME           = "Poll Interval";
 
     public TwitterDataSource(String name, Map<String, String> properties)
@@ -130,13 +131,18 @@ public class TwitterDataSource implements DataSource
  
     private class Fetcher extends Thread
     {
-    	private static final int TWEETQUEUESIZE = 1000;
-    	
+        private static final int TWEETQUEUESIZE = 1000;
+
         public Fetcher()
         {
+            _consumerKey    = null;
+            _consumerSecret = null;
+            _token          = null;
+            _tokenSecret    = null;
+            _pollInterval   = Long.MAX_VALUE;
+
             _twitterClient = null;
             _tweetQueue    = null;
-            _pollInterval  = Long.MAX_VALUE;
 
             _pauseSyncObject = new Object();
             _fetch           = false;
@@ -147,34 +153,80 @@ public class TwitterDataSource implements DataSource
         {
             try
             {
-                _tweetQueue = new LinkedBlockingQueue<String>(TWEETQUEUESIZE);
-
-                StatusesSampleEndpoint endpoint = new StatusesSampleEndpoint();
-                endpoint.stallWarnings(false);
-
-                String         consumerKey    = _properties.get(TWITTER_CONSUMERKEY_PROPERTYNAME);
-                String         consumerSecret = _properties.get(TWITTER_CONSUMERSECRET_PROPERTYNAME);
-                String         token          = _properties.get(TWITTER_TOKEN_PROPERTYNAME);
-                String         secret         = _properties.get(TWITTER_SECRET_PROPERTYNAME);
-                Authentication authentication = new OAuth1(consumerKey, consumerSecret, token, secret);
-
-                ClientBuilder twitterClientBuilder = new ClientBuilder();
-                twitterClientBuilder.name("DataBrokerClient");
-                twitterClientBuilder.hosts(Constants.STREAM_HOST);
-                twitterClientBuilder.endpoint(endpoint);
-                twitterClientBuilder.authentication(authentication);
-                twitterClientBuilder.processor(new StringDelimitedProcessor(_tweetQueue));
-
-                _twitterClient = twitterClientBuilder.build();
-
-                _pollInterval = Long.parseLong(_properties.get(POLLINTERVAL_PROPERTYNAME));
+                _consumerKey    = _properties.get(TWITTER_CONSUMERKEY_PROPERTYNAME);
+                _consumerSecret = _properties.get(TWITTER_CONSUMERSECRET_PROPERTYNAME);
+                _token          = _properties.get(TWITTER_TOKEN_PROPERTYNAME);
+                _tokenSecret    = _properties.get(TWITTER_TOKENSECRET_PROPERTYNAME);
+                _trackTerm      = _properties.get(TWITTER_TRACKTERM_PROPERTYNAME);
+                _pollInterval   = Long.parseLong(_properties.get(POLLINTERVAL_PROPERTYNAME));
             }
             catch (Throwable throwable)
             {
-                logger.log(Level.FINE, "TwitterDataSource: Configuring problem \"" + _name + "\"", throwable);
+                logger.log(Level.WARNING, "TwitterDataSource: Configuring problem \"" + _name + "\"", throwable);
+                _consumerKey    = null;
+                _consumerSecret = null;
+                _token          = null;
+                _tokenSecret    = null;
+                _trackTerm      = null;
+                _pollInterval   = Long.MAX_VALUE;
+            }
+        }
+
+        public void activate()
+        {
+            synchronized (_pauseSyncObject)
+            {
+                try
+                {
+                    _tweetQueue = new LinkedBlockingQueue<String>(TWEETQUEUESIZE);
+
+                    StatusesFilterEndpoint endpoint = new StatusesFilterEndpoint();
+                    endpoint.trackTerms(Lists.newArrayList("twitterapi", _trackTerm));
+
+                    Authentication authentication = new OAuth1(_consumerKey, _consumerSecret, _token, _tokenSecret);
+
+                    ClientBuilder twitterClientBuilder = new ClientBuilder();
+                    twitterClientBuilder.name("DataBrokerClient");
+                    twitterClientBuilder.hosts(Constants.STREAM_HOST);
+                    twitterClientBuilder.endpoint(endpoint);
+                    twitterClientBuilder.authentication(authentication);
+                    twitterClientBuilder.processor(new StringDelimitedProcessor(_tweetQueue));
+
+                    _twitterClient = twitterClientBuilder.build();
+                    _twitterClient.connect();
+                }
+                catch (Throwable throwable)
+                {
+                    logger.log(Level.WARNING, "TwitterDataSource: Configuring problem \"" + _name + "\"", throwable);
+                    _twitterClient = null;
+                    _tweetQueue    = null;
+                }
+
+                _fetch = true;
+                _pauseSyncObject.notify();                
+            }
+        }
+
+        public void deactivate()
+        {
+            synchronized (_pauseSyncObject)
+            {
+                _fetch = false;
+                this.interrupt();
+
+                _twitterClient.stop();
                 _twitterClient = null;
                 _tweetQueue    = null;
-                _pollInterval  = Long.MAX_VALUE;
+            }
+        }
+
+        public void finish()
+        {
+            synchronized (_pauseSyncObject)
+            {
+                _fetch  = false;
+                _finish = true;
+                this.interrupt();
             }
         }
 
@@ -190,61 +242,40 @@ public class TwitterDataSource implements DataSource
                             _pauseSyncObject.wait();
                     }
 
-                    if ((_twitterClient != null) && (! _twitterClient.isDone()) && _fetch)
+                    while ((_twitterClient != null) &&( ! _twitterClient.isDone()) && _fetch)
                     {
-                        _twitterClient.connect();
-
-                        while ((! _twitterClient.isDone()) && _fetch)
+                        try
                         {
                             String tweet = _tweetQueue.poll(_pollInterval, TimeUnit.SECONDS);
                             if (tweet != null)
                                 _dataProvider.produce(tweet);
                         }
-
-                        _twitterClient.stop();
+                        catch (InterruptedException interruptedException)
+                        {
+                            Thread.currentThread().isInterrupted();
+                        }
                     }
                 }
                 catch (InterruptedException interruptedException)
                 {
+                    Thread.currentThread().isInterrupted();
                 }
                 catch (Throwable throwable)
                 {
-                    logger.log(Level.FINE, "TwitterDataSource: Fetched problem \"" + _name + "\"", throwable);
+                    logger.log(Level.WARNING, "TwitterDataSource: Fetched problem \"" + _name + "\"", throwable);
                 }
             }
         }
 
-        public void activate()
-        {
-            synchronized (_pauseSyncObject)
-            {
-                _fetch = true;
-                this.interrupt();
-            }
-        }
-
-        public void deactivate()
-        {
-            synchronized (_pauseSyncObject)
-            {
-                _fetch = false;
-                this.interrupt();
-            }
-        }
-
-        public void finish()
-        {
-            synchronized (_pauseSyncObject)
-            {
-                _fetch  = false;
-                _finish = true;
-                this.interrupt();
-            }
-        }
+        private String _consumerKey;
+        private String _consumerSecret;
+        private String _token;
+        private String _tokenSecret;
+        private String _trackTerm;
+        private long   _pollInterval;
 
         private BasicClient           _twitterClient;
         private BlockingQueue<String> _tweetQueue;
-        private long                  _pollInterval;
 
         private Object           _pauseSyncObject;
         private volatile boolean _fetch;
