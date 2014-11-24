@@ -181,7 +181,7 @@ public class TwitterDataSource implements DataSource
                     _tweetQueue = new LinkedBlockingQueue<String>(TWEETQUEUESIZE);
 
                     StatusesFilterEndpoint endpoint = new StatusesFilterEndpoint();
-                    endpoint.trackTerms(Lists.newArrayList("twitterapi", _trackTerm));
+                    endpoint.trackTerms(Lists.newArrayList(_trackTerm));
 
                     Authentication authentication = new OAuth1(_consumerKey, _consumerSecret, _token, _tokenSecret);
 
