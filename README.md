@@ -3,6 +3,8 @@ Twitter_DataBroker_PlugIn
 
 Twitter DataBroker PlugIn
 
+- Requires adding of "commons-codec-1.9.jar" to directory "standalone/lib".
+
 Licence
 -------
 
