@@ -43,6 +43,11 @@ public class TwitterDataSource implements DataSource
     public static final String TWITTER_TRACKTERM_PROPERTYNAME      = "Twitter Track Term";
     public static final String POLLINTERVAL_PROPERTYNAME           = "Poll Interval";
 
+    public TwitterDataSource()
+    {
+        logger.log(Level.FINE, "TwitterDataSource");
+    }
+
     public TwitterDataSource(String name, Map<String, String> properties)
     {
     	System.err.println("TwitterDataSource");

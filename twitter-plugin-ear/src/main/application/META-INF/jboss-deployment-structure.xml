@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!--                                                                                                     -->
+<!--                                                                                                          -->
 <!-- Copyright (c) 2014-2015, Arjuna Technologies Limited, Newcastle-upon-Tyne, England. All rights reserved. -->
-<!--                                                                                                     -->
+<!--                                                                                                          -->
 
 <jboss-deployment-structure xmlns="urn:jboss:deployment-structure:1.1">
     <ear-subdeployments-isolated>false</ear-subdeployments-isolated>
@@ -10,7 +10,7 @@
         <dependencies>
             <module name="deployment.databroker.ear.data-common.jar"/>
             <module name="deployment.databroker.ear.data-common-jee.jar"/>
-            <module name="deployment.databroker.ear.control-core.jar"/>
+            <module name="deployment.databroker.ear.data-core-jee.jar"/>
         </dependencies>
     </sub-deployment>
 </jboss-deployment-structure>
