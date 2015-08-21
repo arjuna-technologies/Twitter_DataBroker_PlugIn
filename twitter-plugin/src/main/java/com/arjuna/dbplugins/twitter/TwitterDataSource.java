@@ -2,7 +2,7 @@
  * Copyright (c) 2014-2015, Arjuna Technologies Limited, Newcastle-upon-Tyne, England. All rights reserved.
  */
 
-package com.arjuna.dplugins.twitter;
+package com.arjuna.dbplugins.twitter;
 
 import java.util.Collection;
 import java.util.Collections;

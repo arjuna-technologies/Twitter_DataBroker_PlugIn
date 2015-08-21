@@ -7,14 +7,17 @@ package com.arjuna.dbplugins.twitter.test;
 import java.util.Collections;
 import java.util.Map;
 import java.util.HashMap;
+
 import org.json.JSONObject;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
+
 import com.arjuna.databroker.data.connector.ObservableDataProvider;
 import com.arjuna.databroker.data.connector.ObserverDataConsumer;
 import com.arjuna.databroker.data.jee.DataFlowNodeLifeCycleControl;
+import com.arjuna.dbplugins.twitter.TwitterDataSource;
 import com.arjuna.dbutilities.testsupport.dataflownodes.dummy.DummyDataProcessor;
-import com.arjuna.dplugins.twitter.TwitterDataSource;
 
 public class SimpleTest
 {
