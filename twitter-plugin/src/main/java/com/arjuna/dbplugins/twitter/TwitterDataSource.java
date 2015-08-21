@@ -14,6 +14,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import com.arjuna.databroker.data.DataFlow;
 import com.arjuna.databroker.data.DataProvider;
 import com.arjuna.databroker.data.DataSource;
@@ -21,6 +22,7 @@ import com.arjuna.databroker.data.jee.annotation.DataProviderInjection;
 import com.arjuna.databroker.data.jee.annotation.PostActivated;
 import com.arjuna.databroker.data.jee.annotation.PostConfig;
 import com.arjuna.databroker.data.jee.annotation.PostCreated;
+import com.arjuna.databroker.data.jee.annotation.PostRecovery;
 import com.arjuna.databroker.data.jee.annotation.PreDeactivated;
 import com.arjuna.databroker.data.jee.annotation.PreDelete;
 import com.google.common.collect.Lists;
@@ -50,7 +52,7 @@ public class TwitterDataSource implements DataSource
 
     public TwitterDataSource(String name, Map<String, String> properties)
     {
-    	System.err.println("TwitterDataSource");
+        System.err.println("TwitterDataSource");
         logger.log(Level.FINE, "TwitterDataSource: " + name + ", " + properties);
 
         _name       = name;
@@ -95,53 +97,54 @@ public class TwitterDataSource implements DataSource
     }
 
     @PostCreated
+    @PostRecovery
     public void startup()
     {
-    	try
-    	{
-        	System.err.println("startup");
+        try
+        {
+            System.err.println("startup");
             _fetcher = new Fetcher();
             _fetcher.config();
             _fetcher.start();
-    	}
-    	catch (Throwable throwable)
-    	{
-    		throwable.printStackTrace(System.err);
-    	}
+        }
+        catch (Throwable throwable)
+        {
+            throwable.printStackTrace(System.err);
+        }
     }
 
     @PostActivated
     public void activate()
     {
-    	try
-    	{
-        	System.err.println("activate");
+        try
+        {
+            System.err.println("activate");
             _fetcher.activate();
-    	}
-    	catch (Throwable throwable)
-    	{
-    		throwable.printStackTrace(System.err);
-    	}
+        }
+        catch (Throwable throwable)
+        {
+            throwable.printStackTrace(System.err);
+        }
     }
 
     @PostConfig
     public void config()
     {
-    	System.err.println("config");
+        System.err.println("config");
         _fetcher.config();
     }
 
     @PreDeactivated
     public void deactivate()
     {
-    	System.err.println("deactivate");
+        System.err.println("deactivate");
         _fetcher.deactivate();
     }
 
     @PreDelete
     public void shutdown()
     {
-    	System.err.println("shutdown");
+        System.err.println("shutdown");
         try
         {
             _fetcher.finish();
@@ -153,14 +156,14 @@ public class TwitterDataSource implements DataSource
         }
         _fetcher = null;
     }
- 
+
     private class Fetcher extends Thread
     {
         private static final int TWEETQUEUESIZE = 1000;
 
         public Fetcher()
         {
-        	System.err.println("Fetcher");
+            System.err.println("Fetcher");
             _consumerKey    = null;
             _consumerSecret = null;
             _token          = null;
@@ -229,7 +232,7 @@ public class TwitterDataSource implements DataSource
                 }
 
                 _fetch = true;
-                _pauseSyncObject.notify();                
+                _pauseSyncObject.notify();
             }
         }
 
@@ -258,14 +261,14 @@ public class TwitterDataSource implements DataSource
 
         public void run()
         {
-        	System.err.println("Fetcher.run: start");
+            System.err.println("Fetcher.run: start");
             while (! _finish)
             {
                 try
                 {
                     synchronized (_pauseSyncObject)
                     {
-                    	logger.log(Level.FINE, "preWait: " + _twitterClient + ", " +  _fetch);
+                        logger.log(Level.FINE, "preWait: " + _twitterClient + ", " +  _fetch);
                         if ((_twitterClient == null) || _twitterClient.isDone() || (! _fetch))
                             _pauseSyncObject.wait();
                     }
@@ -275,7 +278,7 @@ public class TwitterDataSource implements DataSource
                         try
                         {
                             String tweet = _tweetQueue.poll(_pollInterval, TimeUnit.SECONDS);
-                        	logger.log(Level.FINE, "tweet: " + tweet);
+                            logger.log(Level.FINE, "tweet: " + tweet);
                             if (tweet != null)
                                 _dataProvider.produce(tweet);
                         }
@@ -294,7 +297,7 @@ public class TwitterDataSource implements DataSource
                     logger.log(Level.WARNING, "TwitterDataSource: Fetched problem \"" + _name + "\"", throwable);
                 }
             }
-        	System.err.println("Fetcher.run: end");
+            System.err.println("Fetcher.run: end");
         }
 
         private String _consumerKey;

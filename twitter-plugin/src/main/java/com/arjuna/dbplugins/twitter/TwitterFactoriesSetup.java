@@ -21,11 +21,11 @@ public class TwitterFactoriesSetup
     @PostConstruct
     public void setup()
     {
-    	System.err.println("setup: start");
+        System.err.println("setup: start");
         TwitterDataSourceFactory twitterDataSourceFactory = new TwitterDataSourceFactory("Twitter Data Source Factory", Collections.<String, String>emptyMap());
 
         _dataFlowNodeFactoryInventory.addDataFlowNodeFactory(twitterDataSourceFactory);
-    	System.err.println("setup: end");
+        System.err.println("setup: end");
     }
 
     @PreDestroy

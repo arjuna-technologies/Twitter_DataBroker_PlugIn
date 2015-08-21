@@ -29,21 +29,21 @@ public class TwitterDataSourceFactory implements DataFlowNodeFactory
     @Override
     public String getName()
     {
-    	System.err.println("getName");
+        System.err.println("getName");
         return _name;
     }
 
     @Override
     public Map<String, String> getProperties()
     {
-    	System.err.println("getProperties");
+        System.err.println("getProperties");
         return _properties;
     }
 
     @Override
     public List<Class<? extends DataFlowNode>> getClasses()
     {
-    	System.err.println("getClasses");
+        System.err.println("getClasses");
         List<Class<? extends DataFlowNode>> classes = new LinkedList<Class<? extends DataFlowNode>>();
 
         classes.add(DataSource.class);
@@ -54,7 +54,7 @@ public class TwitterDataSourceFactory implements DataFlowNodeFactory
     @Override
     public <T extends DataFlowNode> List<String> getMetaPropertyNames(Class<T> dataFlowNodeClass)
     {
-    	System.err.println("getMetaPropertyNames");
+        System.err.println("getMetaPropertyNames");
         return Collections.emptyList();
     }
 
@@ -62,7 +62,7 @@ public class TwitterDataSourceFactory implements DataFlowNodeFactory
     public <T extends DataFlowNode> List<String> getPropertyNames(Class<T> dataFlowNodeClass, Map<String, String> metaProperties)
         throws InvalidClassException, InvalidMetaPropertyException, MissingMetaPropertyException
     {
-    	System.err.println("getPropertyNames");
+        System.err.println("getPropertyNames");
         List<String> propertyNames = new LinkedList<String>();
 
         propertyNames.add(TwitterDataSource.TWITTER_CONSUMERKEY_PROPERTYNAME);
@@ -80,7 +80,7 @@ public class TwitterDataSourceFactory implements DataFlowNodeFactory
     public <T extends DataFlowNode> T createDataFlowNode(String name, Class<T> dataFlowNodeClass, Map<String, String> metaProperties, Map<String, String> properties)
         throws InvalidNameException, InvalidPropertyException, MissingPropertyException
     {
-    	System.err.println("createDataFlowNode");
+        System.err.println("createDataFlowNode");
         if (dataFlowNodeClass.isAssignableFrom(TwitterDataSource.class))
             return (T) new TwitterDataSource(name, properties);
         else

@@ -7,23 +7,23 @@ package com.arjuna.dbplugins.twitter.test;
 import java.util.Collections;
 import java.util.Map;
 import java.util.HashMap;
-
-import org.json.JSONObject;
+import java.util.UUID;
 import org.junit.Test;
-
 import static org.junit.Assert.*;
-
 import com.arjuna.databroker.data.connector.ObservableDataProvider;
 import com.arjuna.databroker.data.connector.ObserverDataConsumer;
-import com.arjuna.databroker.data.jee.DataFlowNodeLifeCycleControl;
+import com.arjuna.databroker.data.core.DataFlowNodeLifeCycleControl;
 import com.arjuna.dbplugins.twitter.TwitterDataSource;
-import com.arjuna.dbutilities.testsupport.dataflownodes.dummy.DummyDataProcessor;
+import com.arjuna.dbutils.testsupport.dataflownodes.dummy.DummyDataProcessor;
+import com.arjuna.dbutils.testsupport.dataflownodes.lifecycle.TestJEEDataFlowNodeLifeCycleControl;
 
 public class SimpleTest
 {
     @Test
     public void simpleInvocation()
     {
+        DataFlowNodeLifeCycleControl dataFlowNodeLifeCycleControl = new TestJEEDataFlowNodeLifeCycleControl();
+
         AuthenticationProperties authenticationProperties = new AuthenticationProperties("authentication.properties");
 
         String              name       = "Twitter Data Source";
@@ -38,8 +38,8 @@ public class SimpleTest
         TwitterDataSource  twitterDataSource  = new TwitterDataSource(name, properties);
         DummyDataProcessor dummyDataProcessor = new DummyDataProcessor("Dummy Data Processor", Collections.<String, String>emptyMap());
 
-        DataFlowNodeLifeCycleControl.processCreatedDataFlowNode(twitterDataSource, null);
-        DataFlowNodeLifeCycleControl.processCreatedDataFlowNode(dummyDataProcessor, null);
+        dataFlowNodeLifeCycleControl.completeCreationAndActivateDataFlowNode(UUID.randomUUID().toString(), twitterDataSource, null);
+        dataFlowNodeLifeCycleControl.completeCreationAndActivateDataFlowNode(UUID.randomUUID().toString(), dummyDataProcessor, null);
 
         ((ObservableDataProvider<String>) twitterDataSource.getDataProvider(String.class)).addDataConsumer((ObserverDataConsumer<String>) dummyDataProcessor.getDataConsumer(String.class));
 
@@ -52,7 +52,7 @@ public class SimpleTest
             fail("Interrupted during sleep");
         }
 
-        DataFlowNodeLifeCycleControl.removeDataFlowNode(dummyDataProcessor);
+        dataFlowNodeLifeCycleControl.removeDataFlowNode(dummyDataProcessor);
 
         assertTrue("Didn't receive any tweets", dummyDataProcessor.receivedData().size() > 0);
     }
